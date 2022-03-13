@@ -46,7 +46,7 @@ def leakyRelu (value_node):
       return value_node*alpha 
     else:
       return value_node
-    
+# leakyRelu = max (x*alpha; x)
 def forward_calculation_node (weights, inputs, select_activate):
   
     value_node = weights[-1]
