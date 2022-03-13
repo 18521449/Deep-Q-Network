@@ -1,1 +1,5 @@
-
+sử dụng hàm kích khoạt LeakyRelu 
+   f(x) = alpha * x if x < 0
+   f(x) = x if x >= 0
+        với alpha = 0.1 
+chỉnh code so với phiên bản trước dở dòng 481 (đưa replay vào trong vòng if done) 
