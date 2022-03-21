@@ -94,7 +94,7 @@
 //                    else    
 //                        temp_adder_value    <= {1'b0, mantise_M}  - {1'b0, mantise_m};
 //                else
-//                    temp_adder_value    <= {1'b0, mantise_M}  + {1'b0, mantise_m};         
+//                    temp_adder_value    <= {1'b0, mantise_m}  + {1'b0, mantise_M};         
 //            end
 //            else begin
 //                sign_temp    <=  sign_temp;
@@ -165,7 +165,7 @@ module adder_sub_for_floating_point32 // 1 CLOCK
     
     assign  addAB           =   {1'b0, mantise_M} + {1'b0, mantise_m};
     assign  subAB           =   {1'b0, mantise_M} - {1'b0, mantise_m};
-    assign  subBA           =   {1'b0, mantise_M} - {1'b0, mantise_m};
+    assign  subBA           =   {1'b0, mantise_m} - {1'b0, mantise_M};
     
     always @ (posedge clk or negedge rstn) begin
         if(!rstn) begin
