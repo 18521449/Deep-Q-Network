@@ -32,6 +32,7 @@ feed_forward_hidden_layer
 		.NUMBER_OF_INPUT_NODE	(NUMBER_OF_INPUT_NODE),
 		.NUMBER_OF_OUTPUT_NODE	(NUMBER_OF_OUTPUT_NODE)
 		)
+	feed_forward_hidden_layer_tb
 	(	clk,
 		rst_n,
 		i_valid,
