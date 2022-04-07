@@ -1,0 +1,35 @@
+// memory data file (do not edit the following line - required for mem load use)
+// instance=/tb_target_net/target_net_tb/feed_forward/hidden_1_layer/ram_out
+// format=hex addressradix=h dataradix=h version=1.0 wordsperline=1 noaddress
+bd9a8a5b
+3ebfe502
+bc65642d
+bcb2c3ac
+3f1d93cc
+3f6cfca4
+bc5bffb6
+3d910090
+3f5e2c50
+3faf26a0
+3fdbaf7c
+3f1a274f
+3db8565e
+bc78f6fd
+3f41d5e2
+3eb3ffc5
+3f64d0e1
+3e4738aa
+bc6c0a35
+3e94a318
+3efe7e40
+3e2dbacc
+3f2bd4be
+3f19d72e
+bd85c4e8
+3e66773c
+bddd2f68
+3f5d35db
+b9ab0ef3
+3c3e23c0
+3ef8a156
+3f32814c

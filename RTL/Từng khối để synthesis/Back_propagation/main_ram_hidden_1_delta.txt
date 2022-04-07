@@ -1,0 +1,35 @@
+// memory data file (do not edit the following line - required for mem load use)
+// instance=/tb_back_propagation/tb_back_propagation_/bp_hidden_1_layer/ram_delta_node
+// format=hex addressradix=h dataradix=h version=1.0 wordsperline=1 noaddress
+43694599
+451870b9
+4375f206
+437d0f5e
+4530f477
+4533dcf8
+43543151
+451ddbf3
+452d7387
+44f77248
+45283d7e
+4523bce1
+45320600
+436ef021
+450c8c28
+452951cf
+451762fb
+44ef9480
+43479196
+45333698
+4520f48d
+451587be
+4509f3f2
+451f8e6e
+4377aced
+4532a4bc
+438d0991
+4515d154
+4382cc01
+450e6a5b
+452c2bb1
+45392a41
