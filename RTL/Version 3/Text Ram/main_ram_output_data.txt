@@ -1,0 +1,6 @@
+// memory data file (do not edit the following line - required for mem load use)
+// instance=/tb_main_net/tb_main_net_/feed_forward_step/output_layer/ram_out
+// format=hex addressradix=h dataradix=h version=1.0 wordsperline=1 noaddress
+42e26279
+42f3282c
+42c617e1

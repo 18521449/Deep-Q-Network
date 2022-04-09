@@ -1,0 +1,6 @@
+// memory data file (do not edit the following line - required for mem load use)
+// instance=/tb_main_net/tb_main_net_/back_propagation_step/bp_output_layer/ram_delta_node
+// format=hex addressradix=h dataradix=h version=1.0 wordsperline=1 noaddress
+42d86279
+42e7282c
+42c217e1

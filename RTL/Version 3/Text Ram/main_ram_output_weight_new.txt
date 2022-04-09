@@ -1,0 +1,102 @@
+// memory data file (do not edit the following line - required for mem load use)
+// instance=/tb_main_net/tb_main_net_/update_weight_step/update_output_layer/ram_new_weight
+// format=hex addressradix=h dataradix=h version=1.0 wordsperline=1 noaddress
+bfb2a559 = -1.395671010017395
+bf914656 = -1.1349589824676514
+bf850295 = -1.039141297340393
+bf584954 = -0.8448688983917236
+bf7a7b68 = -0.9784455299377441
+bf2e788e = -0.6815270185470581
+bfb50d29 = -1.4144641160964966
+bf60fcc2 = -0.8788567781448364
+bfa8d7b6
+bfa71182
+bfae3210
+bf389a84
+bf858efb
+bf969a17
+bf8ca63d
+bfa306f8
+bf6b58b2
+bf866f38
+befa6468
+bf827ba2
+bf9331f1
+bf443448
+bfc691e0
+bf1d6a58
+c00204cd
+bfae10d8
+bf2161ba
+bf8e492b
+bf8faf2b
+bf654772
+bfc06cfb
+bf7ab588
+3f2d7f60
+bfc5dfe0
+bfa7f08b
+bfcaf0de
+bf89b6ad
+bf257998
+bf4fa338
+bfa06271
+bfd1f159
+bf932729
+bf8d4e1e
+bf646ae4
+bebfd764
+bfa505e0
+bfa57668
+becadcdc
+bfa1aad0
+bf8986f3
+bf95e476
+bf9ccaf9
+bf8dbac3
+bfd575ec
+bfdb102f
+bf84cc1d
+bf089504
+bfda878c
+bfa7311a
+bf4820c2
+bf83f739
+bfa4b17a
+bf901bf5
+bfcf94c8
+bf5a52fe
+3e894a9c
+bf85c5b9
+bfb74599
+bf5cd670
+bfada6ed
+bf6c437a
+bf8865c9
+bfc2fe36
+bf77d890
+bfab9128
+bf3a3736
+bf9aa916
+bef6da24
+bf127bb2
+bf9bfc18
+bf880247
+bf76ce12
+be9d4948
+bf7d856c
+bf8df2c8
+bf5779e4
+bfc183f6
+bfa62326
+bf9666d9
+bf968aee
+bfd1ad83
+bf2e1be4
+bfb4e91e
+bf538cc2
+bee38594
+beb33d40
+bf244d46
+beed5df0
+3f2e6d45
