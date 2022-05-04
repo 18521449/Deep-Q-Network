@@ -1,5 +1,1 @@
-learning rate = 0.002
-input = [-1.5,1.25]
-expected = [5,6,2]
 
-file error.txt sẽ tương đương với delta theo định nghĩa của m và ngược lại
