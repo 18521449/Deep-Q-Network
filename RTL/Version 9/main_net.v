@@ -22,14 +22,10 @@ module main_net
 		i_weight_layer,
 		i_weight_addr,
 		i_weight,
-		i_weight_sync_request,
-		o_weight_valid,
-		o_weight_layer,
-		o_weight_addr,
-		o_weight,
 		o_arg_max_valid,
 		o_arg_max,
-		o_main_net_done
+		o_data,
+		o_valid
 	);
 	localparam ACTION_WIDTH				= $clog2(NUMBER_OF_OUTPUT_NODE);
 	localparam DATA_COUNTER_WIDTH 		= $clog2(NUMBER_OF_HIDDEN_NODE_LAYER_1);
@@ -51,7 +47,8 @@ module main_net
 	input 		[DATA_WIDTH-1:0]			i_weight;
 	output	reg								o_arg_max_valid;
 	output	reg	[LAYER_WIDTH-1:0]			o_arg_max;
-	output	reg 							o_main_net_done;
+	output		[DATA_WIDTH-1:0]			o_data;
+	output	 								o_valid;
 	//----------------------------------------------------//
 	
 	//---------------------------------------------------------//
@@ -121,8 +118,6 @@ module main_net
 	reg 									valid_upd;
 	reg 									load_data_bp;
 	reg 									load_expected;
-	reg 									loss_value_active;
-	reg 									train_action_active;
 	reg 		[DATA_COUNTER_WIDTH-1:0] 	node_counter;
 	reg 		[DATA_WIDTH-1:0] 			loss_value;
 	reg 		[ACTION_WIDTH-1:0]			train_action;
@@ -274,332 +269,268 @@ module main_net
 			
 			if (i_loss_value_valid) begin
 				loss_value <= i_loss_value;
-				loss_value_active <= 1;
 			end
-			
 			if (i_train_action_valid) begin
 				train_action <= i_train_action;
-				train_action_active <= 1;
 			end
 			
-			if (i_weight_sync_request) begin
-				weight_sync_mode 	<= 1;
-				weight_counter 		<= 0;
-				weight_layer 		<= 2'b00;
-			end
-			else begin
-				if (i_weight_valid) begin
-					active_mode <= 3'b000;
-				end
-				else begin
-					if (i_data_valid) begin
-						active_mode <= 3'b001;
-					end
-				end
-			end
-			if (weight_sync_mode) begin
-				mem_i_weight_valid 	<= 1;
-				mem_i_weight_layer 	<= weight_layer;
-				mem_i_weight_addr 	<= weight_counter;
-				case(weight_layer)
-					2'b01:
-						begin
-							if (weight_counter < NUMBER_OF_HIDDEN_NODE_LAYER_1*(NUMBER_OF_INPUT_NODE+1)-1) begin
-								weight_counter 	<= weight_counter + 1;
-							end
-							else begin
-								weight_counter 	<= 'd0;
-								weight_layer 	<= 2'b10;
-							end
-						end
-					2'b10:
-						begin
-							if (weight_counter < NUMBER_OF_HIDDEN_NODE_LAYER_2*(NUMBER_OF_HIDDEN_NODE_LAYER_1+1)-1) begin
-								weight_counter 	<= weight_counter + 1;
-							end
-							else begin
-								weight_counter 	<= 'd0;
-								weight_layer 	<= 2'b11;
-							end
-						end
-					2'b11:
-						begin
-							if (weight_counter < NUMBER_OF_OUTPUT_NODE*(NUMBER_OF_HIDDEN_NODE_LAYER_2+1)-1) begin
-								weight_counter 	<= weight_counter + 1;
-							end
-							else begin
-								weight_counter 	<= 'd0;
-								weight_layer 	<= 2'b01;
-								weight_sync_mode <= 0;
-							end
-						end
-				endcase
-			end
-			else begin
-				case(active_mode)
-					3'b000: // weight initialization
-						begin	
-							o_main_net_done 		<= 0;
-							mem_i_weight_valid 		<= i_weight_valid;
-							mem_i_rw_weight_select 	<= 1'b0; // write weight
-							mem_i_weight_layer 		<= i_weight_layer;
-							mem_i_weight_addr		<= i_weight_addr;
-							mem_i_weight 			<= i_weight;
-							
-							if (i_weight_valid) begin
-								if (i_weight_layer == 'b11) begin
-									if (i_weight_addr == NUMBER_OF_OUTPUT_NODE*(NUMBER_OF_HIDDEN_NODE_LAYER_2+1)-1) begin
-										active_mode <= 3'b001;
-									end
-								end
-							end
-						end
+			case(active_mode)
+				3'b000: // weight initialization
+					begin	
+						mem_i_weight_valid 		<= i_weight_valid;
+						mem_i_rw_weight_select 	<= 1'b0; // write weight
+						mem_i_weight_layer 		<= i_weight_layer;
+						mem_i_weight_addr		<= i_weight_addr;
+						mem_i_weight 			<= i_weight;
 						
-					3'b001: // load state data
-						begin
-							o_main_net_done 		<= 0;
-							mem_i_data_valid 		<= i_data_valid;
-							mem_i_rw_data_select 	<= 1'b0; // write data
-							mem_i_data_layer 		<= 2'b00;
-							mem_i_data_addr			<= i_data_addr;
-							mem_i_data 				<= i_data;			
-							
-							if (i_data_valid) begin
-								if (i_data_addr == NUMBER_OF_INPUT_NODE-1) begin
-									active_mode <= 3'b010;
+						if (i_weight_valid) begin
+							if (i_weight_layer == 'b11) begin
+								if (i_weight_addr == NUMBER_OF_OUTPUT_NODE*(NUMBER_OF_HIDDEN_NODE_LAYER_2+1)-1) begin
+									active_mode <= 3'b001;
 								end
 							end
 						end
+					end
+					
+				3'b001: // load state data
+					begin
+						mem_i_data_valid 		<= i_data_valid;
+						mem_i_rw_data_select 	<= 1'b0; // write data
+						mem_i_data_layer 		<= 2'b00;
+						mem_i_data_addr			<= i_data_addr;
+						mem_i_data 				<= i_data;			
+						
+						if (i_data_valid) begin
+							if (i_data_addr == NUMBER_OF_INPUT_NODE-1) begin
+								active_mode <= 3'b010;
+							end
+						end
+					end
 
-					3'b010: // feed forward mode
-						begin
-							valid_fw 			<= 1;
-							valid_bp 			<= 0;
-							valid_upd 			<= 0;
+				3'b010: // feed forward mode
+					begin
+						valid_fw 			<= 1;
+						valid_bp 			<= 0;
+						valid_upd 			<= 0;
+						
+						mem_i_weight_valid 		<= fw_o_weight_valid_request;
+						mem_i_rw_weight_select 	<= 1'b1; // read weight
+						mem_i_weight_layer 		<= fw_o_weight_layer_request;
+						mem_i_weight_addr		<= fw_o_weight_addr_request;
+						
+						mem_i_data_valid 		<= fw_o_data_valid;
+						mem_i_rw_data_select 	<= 1'b0; // write data
+						mem_i_data_layer 		<= fw_o_data_layer;
+						mem_i_data_addr 		<= fw_o_data_addr;
+						mem_i_data 				<= fw_o_data;
+						
+						if (fw_o_data_valid) begin
+							if (fw_o_data_layer == 2'b11) begin
 							
-							mem_i_weight_valid 		<= fw_o_weight_valid_request;
-							mem_i_rw_weight_select 	<= 1'b1; // read weight
-							mem_i_weight_layer 		<= fw_o_weight_layer_request;
-							mem_i_weight_addr		<= fw_o_weight_addr_request;
-							
-							mem_i_data_valid 		<= fw_o_data_valid;
-							mem_i_rw_data_select 	<= 1'b0; // write data
-							mem_i_data_layer 		<= fw_o_data_layer;
-							mem_i_data_addr 		<= fw_o_data_addr;
-							mem_i_data 				<= fw_o_data;
-							
-							if (fw_o_data_valid) begin
-								if (fw_o_data_layer == 2'b11) begin
+								arg_max_valid_in 		<= 1;
+								arg_max_data_in_addr 	<= fw_o_data_addr;
+								arg_max_data_in 		<= fw_o_data;
 								
-									arg_max_valid_in 		<= 1;
-									arg_max_data_in_addr 	<= fw_o_data_addr;
-									arg_max_data_in 		<= fw_o_data;
-									
-									if (fw_o_data_addr == NUMBER_OF_OUTPUT_NODE-1) begin
-										active_mode <= 3'b011;
-									end
+								if (fw_o_data_addr == NUMBER_OF_OUTPUT_NODE-1) begin
+									active_mode <= 3'b011;
 								end
-								else arg_max_valid_in <= 0;
 							end
 							else arg_max_valid_in <= 0;
 						end
+						else arg_max_valid_in <= 0;
+					end
 
-					3'b011: // load expected data for back propagation and load argument max data out
-						begin
-							valid_fw 			<= 0;
-							valid_bp 			<= 0;
-							valid_upd 			<= 0;
-							arg_max_valid_in 	<= 0;
-							
-							if (arg_max_valid_out) begin
-								o_arg_max_valid 	<= 1;
-								o_arg_max 			<= arg_max_data_out;
-								load_expected 		<= 1;
+				3'b011: // load expected data for back propagation and load argument max data out
+					begin
+						valid_fw 			<= 0;
+						valid_bp 			<= 0;
+						valid_upd 			<= 0;
+						arg_max_valid_in 	<= 0;
+						
+						if (arg_max_valid_out) begin
+							o_arg_max_valid 	<= 1;
+							o_arg_max 			<= arg_max_data_out;
+							load_expected 		<= 1;
+							node_counter 		<= 'd0;
+						end
+						else o_arg_max_valid <= 0;
+						
+						if (load_expected) begin
+							if (node_counter < NUMBER_OF_OUTPUT_NODE) begin
+								mem_i_data_valid 		<= 1;
+								mem_i_rw_data_select	<= 1'b1; // read data
+								mem_i_data_layer 		<= 2'b11;
+								mem_i_data_addr 		<= node_counter;
+								node_counter 			<= node_counter + 1;
+							end
+							else begin
 								node_counter 		<= 'd0;
+								load_expected 		<= 0;
+								mem_i_data_valid 	<= 0;
+								data_layer		 	<= 2'b00;
 							end
-							else o_arg_max_valid <= 0;
-							
-							if (train_action_active & loss_value_active) begin
-								if (load_expected) begin
-									if (node_counter < NUMBER_OF_OUTPUT_NODE) begin
-										mem_i_data_valid 		<= 1;
-										mem_i_rw_data_select	<= 1'b1; // read data
-										mem_i_data_layer 		<= 2'b11;
-										mem_i_data_addr 		<= node_counter;
-										node_counter 			<= node_counter + 1;
-									end
-									else begin
-										node_counter 		<= 'd0;
-										load_expected 		<= 0;
-										mem_i_data_valid 	<= 0;
-										data_layer		 	<= 2'b00;
-									end
+						end
+						
+						if (mem_o_data_valid) begin
+							if (mem_o_data_layer == 2'b11) begin
+								bp_i_data_expected_valid 	<= 1;
+								bp_i_data_expected_addr 	<= mem_o_data_addr;
+								if (mem_o_data_addr == train_action) begin
+									bp_i_data_expected 		<= loss_value;
 								end
-							end
-							
-							if (mem_o_data_valid) begin
-								if (mem_o_data_layer == 2'b11) begin
-									bp_i_data_expected_valid 	<= 1;
-									bp_i_data_expected_addr 	<= mem_o_data_addr;
-									if (mem_o_data_addr == train_action) begin
-										bp_i_data_expected 		<= loss_value;
-									end
-									else bp_i_data_expected 	<= mem_o_data;
-									if (mem_o_data_addr == NUMBER_OF_OUTPUT_NODE-1) begin
-										active_mode <= 3'b100;
-										load_data_bp <= 1;
-										train_action_active <= 0;
-										loss_value_active <= 0;
-									end
+								else bp_i_data_expected 	<= mem_o_data;
+								if (mem_o_data_addr == NUMBER_OF_OUTPUT_NODE-1) begin
+									active_mode <= 3'b100;
+									load_data_bp <= 1;
 								end
-								else bp_i_data_expected_valid 	<= 0;
 							end
 							else bp_i_data_expected_valid 	<= 0;
 						end
-					
-					3'b100: // load data node for back propagation
-						begin			
-							valid_fw 			<= 0;
-							valid_bp 			<= 0;
-							valid_upd 			<= 0;
-							bp_i_data_valid 	<= 1;
-							bp_i_data_expected_valid <= 0;
+						else bp_i_data_expected_valid 	<= 0;
+					end
+				
+				3'b100: // load data node for back propagation
+					begin			
+						valid_fw 			<= 0;
+						valid_bp 			<= 0;
+						valid_upd 			<= 0;
+						bp_i_data_valid 	<= 1;
+						bp_i_data_expected_valid <= 0;
+						
+						if (load_data_bp) begin
+							mem_i_data_valid 		<= 1;
+							mem_i_rw_data_select 	<= 1'b1; // read data
+							mem_i_data_layer 		<= data_layer;
+							mem_i_data_addr 		<= node_counter;
 							
-							if (load_data_bp) begin
-								mem_i_data_valid 		<= 1;
-								mem_i_rw_data_select 	<= 1'b1; // read data
-								mem_i_data_layer 		<= data_layer;
-								mem_i_data_addr 		<= node_counter;
-								
-								case(data_layer)
-									2'b00:
-										begin
-											if (node_counter < NUMBER_OF_INPUT_NODE-1) begin
-												node_counter <= node_counter + 1;
-											end
-											else begin
-												node_counter <= 'd0;
-												data_layer <= 2'b01;
-											end
+							case(data_layer)
+								2'b00:
+									begin
+										if (node_counter < NUMBER_OF_INPUT_NODE-1) begin
+											node_counter <= node_counter + 1;
 										end
-									2'b01:
-										begin
-											if (node_counter < NUMBER_OF_HIDDEN_NODE_LAYER_1-1) begin
-												node_counter <= node_counter + 1;
-											end
-											else begin
-												node_counter <= 'd0;
-												data_layer <= 2'b10;
-											end
+										else begin
+											node_counter <= 'd0;
+											data_layer <= 2'b01;
 										end
-									2'b10:
-										begin
-											if (node_counter < NUMBER_OF_HIDDEN_NODE_LAYER_2-1) begin
-												node_counter <= node_counter + 1;
-											end
-											else begin
-												node_counter <= 'd0;
-												data_layer <= 2'b11;
-											end
-										end
-									2'b11:
-										begin
-											if (node_counter < NUMBER_OF_OUTPUT_NODE-1) begin
-												node_counter <= node_counter + 1;
-											end
-											else begin
-												node_counter <= 'd0;
-												data_layer <= 2'b00;
-												load_data_bp <= 0;
-											end
-										end
-								endcase
-							end 
-							else mem_i_data_valid <= 0;
-								
-							if (mem_o_data_valid) begin
-								if (mem_o_data_layer == 2'b11) begin
-									if (mem_o_data_addr == NUMBER_OF_OUTPUT_NODE-1) begin
-										active_mode <= 3'b101;
-										bp_i_data_valid <= 0;
 									end
+								2'b01:
+									begin
+										if (node_counter < NUMBER_OF_HIDDEN_NODE_LAYER_1-1) begin
+											node_counter <= node_counter + 1;
+										end
+										else begin
+											node_counter <= 'd0;
+											data_layer <= 2'b10;
+										end
+									end
+								2'b10:
+									begin
+										if (node_counter < NUMBER_OF_HIDDEN_NODE_LAYER_2-1) begin
+											node_counter <= node_counter + 1;
+										end
+										else begin
+											node_counter <= 'd0;
+											data_layer <= 2'b11;
+										end
+									end
+								2'b11:
+									begin
+										if (node_counter < NUMBER_OF_OUTPUT_NODE-1) begin
+											node_counter <= node_counter + 1;
+										end
+										else begin
+											node_counter <= 'd0;
+											data_layer <= 2'b00;
+											load_data_bp <= 0;
+										end
+									end
+							endcase
+						end 
+						else mem_i_data_valid <= 0;
+							
+						if (mem_o_data_valid) begin
+							if (mem_o_data_layer == 2'b11) begin
+								if (mem_o_data_addr == NUMBER_OF_OUTPUT_NODE-1) begin
+									active_mode <= 3'b101;
+									bp_i_data_valid <= 0;
 								end
 							end
 						end
-					
-					3'b101: // back propagation mode
-						begin
-							valid_fw 			<= 0;
-							valid_bp 			<= 1;
-							valid_upd 			<= 0;
-							arg_max_valid_in 	<= 0;
-							bp_i_data_valid 	<= 0;
-							bp_i_data_expected_valid <= 0;
-							
-							mem_i_weight_valid 		<= bp_o_weight_valid_request;
-							mem_i_rw_weight_select 	<= 1'b1; // read weight
-							mem_i_weight_layer 		<= bp_o_weight_layer_request;
-							mem_i_weight_addr		<= bp_o_weight_addr_request;
-							
-							if (mem_o_weight_valid) begin
-								if (mem_o_weight_layer == 2'b10) begin
-									if (mem_o_weight_addr == NUMBER_OF_HIDDEN_NODE_LAYER_2*(NUMBER_OF_HIDDEN_NODE_LAYER_1+1)-1) begin
-										active_mode <= 3'b110;
-									end
+					end
+				
+				3'b101: // back propagation mode
+					begin
+						valid_fw 			<= 0;
+						valid_bp 			<= 1;
+						valid_upd 			<= 0;
+						arg_max_valid_in 	<= 0;
+						bp_i_data_valid 	<= 0;
+						bp_i_data_expected_valid <= 0;
+						
+						mem_i_weight_valid 		<= bp_o_weight_valid_request;
+						mem_i_rw_weight_select 	<= 1'b1; // read weight
+						mem_i_weight_layer 		<= bp_o_weight_layer_request;
+						mem_i_weight_addr		<= bp_o_weight_addr_request;
+						
+						if (mem_o_weight_valid) begin
+							if (mem_o_weight_layer == 2'b10) begin
+								if (mem_o_weight_addr == NUMBER_OF_HIDDEN_NODE_LAYER_2*(NUMBER_OF_HIDDEN_NODE_LAYER_1+1)-1) begin
+									active_mode <= 3'b110;
 								end
 							end
 						end
-					
-					3'b110: // update weight mode 
-						begin
-							valid_fw 			<= 0;
-							valid_bp 			<= 0;
-							valid_upd			<= 1;
-							arg_max_valid_in 	<= 0;
-							bp_i_data_valid 	<= 0;
-							bp_i_data_expected_valid <= 0;
-							
-							mem_i_weight_valid 		<= upd_o_weight_valid_request;
-							mem_i_rw_weight_select 	<= 1'b1; // read
-							mem_i_weight_layer 		<= upd_o_weight_layer_request;
-							mem_i_weight_addr		<= upd_o_weight_addr_request;
-							
-							if (mem_o_weight_valid) begin
-								if (mem_o_weight_layer == 2'b01) begin
-									if (mem_o_weight_addr == NUMBER_OF_HIDDEN_NODE_LAYER_1*(NUMBER_OF_INPUT_NODE+1)-1) begin
-										active_mode <= 3'b111;
-									end
+					end
+				
+				3'b110: // update weight mode 
+					begin
+						valid_fw 			<= 0;
+						valid_bp 			<= 0;
+						valid_upd			<= 1;
+						arg_max_valid_in 	<= 0;
+						bp_i_data_valid 	<= 0;
+						bp_i_data_expected_valid <= 0;
+						
+						mem_i_weight_valid 		<= upd_o_weight_valid_request;
+						mem_i_rw_weight_select 	<= 1'b1; // read
+						mem_i_weight_layer 		<= upd_o_weight_layer_request;
+						mem_i_weight_addr		<= upd_o_weight_addr_request;
+						
+						if (mem_o_weight_valid) begin
+							if (mem_o_weight_layer == 2'b01) begin
+								if (mem_o_weight_addr == NUMBER_OF_HIDDEN_NODE_LAYER_1*(NUMBER_OF_INPUT_NODE+1)-1) begin
+									active_mode <= 3'b111;
 								end
 							end
 						end
-					3'b111: // load new weight to memory_block	
-						begin
-							valid_fw 			<= 0;
-							valid_bp 			<= 0;
-							valid_upd			<= 0;
-							arg_max_valid_in 	<= 0;
-							bp_i_data_valid 	<= 0;
-							bp_i_data_expected_valid <= 0;
-							
-							mem_i_weight_valid 		<= upd_o_new_weight_valid;
-							mem_i_rw_weight_select 	<= 1'b0; // write
-							mem_i_weight_layer 		<= upd_o_new_weight_layer;
-							mem_i_weight_addr		<= upd_o_new_weight_addr;
-							mem_i_weight			<= upd_o_new_weight;
-							
-							if (upd_o_new_weight_valid) begin
-								if (upd_o_new_weight_layer == 2'b11) begin
-									if (upd_o_new_weight_addr == NUMBER_OF_OUTPUT_NODE*(NUMBER_OF_HIDDEN_NODE_LAYER_2+1)-1) begin
-										active_mode <= 3'b001;
-										o_main_net_done <= 1;
-									end
+					end
+				3'b111: // load new weight to memory_block	
+					begin
+						valid_fw 			<= 0;
+						valid_bp 			<= 0;
+						valid_upd			<= 0;
+						arg_max_valid_in 	<= 0;
+						bp_i_data_valid 	<= 0;
+						bp_i_data_expected_valid <= 0;
+						
+						mem_i_weight_valid 		<= upd_o_new_weight_valid;
+						mem_i_rw_weight_select 	<= 1'b0; // write
+						mem_i_weight_layer 		<= upd_o_new_weight_layer;
+						mem_i_weight_addr		<= upd_o_new_weight_addr;
+						mem_i_weight			<= upd_o_new_weight;
+						
+						if (upd_o_new_weight_valid) begin
+							if (upd_o_new_weight_layer == 2'b11) begin
+								if (upd_o_new_weight_addr == NUMBER_OF_OUTPUT_NODE*(NUMBER_OF_HIDDEN_NODE_LAYER_2+1)-1) begin
+									active_mode <= 3'b000;
 								end
 							end
 						end
-				endcase	
-			end
+					end
+			endcase	
 		end
 	end
 			
 		
 endmodule
+
