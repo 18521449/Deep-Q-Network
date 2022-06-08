@@ -71,13 +71,13 @@ initial begin
 			i_reward			<= 'hC1300000;
 			i_done				<= 0;
 	#k#k i_valid <= 0;
-	#(50000*2*k) i_valid 		<= 1;
+	#(9000*2*k) i_valid 		<= 1;
 			i_state_0 			<= 'hBF0BB4B6;
 			i_state_1			<= 'h3BA54102;
 			i_reward			<= 'h40800000;
 			i_done				<= 0;
 	#k#k i_valid <= 0;
-	#(50000*2*k)	$finish;
+	#(9000*2*k)	$finish;
 end
 
 deep_q_network
