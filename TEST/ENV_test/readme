@@ -1,2 +1,0 @@
-
-packet = [state[0], state[1], next_state[0], next_state[1], action, reward, done]
