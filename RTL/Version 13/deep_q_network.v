@@ -227,14 +227,15 @@ module deep_q_network
 						rep_i_next_state_1		<= i_state_1;
 						rep_i_done				<= i_done;
 						
-						if (i_done) begin
-							ann_i_valid <= 0;
-							finite_state_machine <= 2'b11;
-						end
-						else begin
+						if (!i_done) begin
 							ann_i_valid 			<= i_valid;
 							ann_i_current_state_0 	<= i_state_0;
 							ann_i_current_state_1 	<= i_state_1;
+						end
+						else ann_i_valid 			<= 0;
+						
+						if (rep_o_train_mode) begin
+							finite_state_machine <= 2'b11;
 						end
 					end
 				2'b11: // training mode
@@ -270,4 +271,5 @@ module deep_q_network
 	endfunction
 	
 endmodule
+
 
