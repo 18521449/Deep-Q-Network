@@ -10,12 +10,12 @@ module random_galois_8bit
 	input 						clk;
 	input 						rst_n;
 	input 						i_enable;
-	output		[8:1] 			o_random_data;
+	output		[7:0] 			o_random_data;
 	//----------------------------------------//
 	
 	wire 	taps;
-	wire 	[8:1] Q_x;
-	reg 	[8:1] Q_next, Q_reg;
+	wire 	[7:0] Q_x;
+	reg 	[7:0] Q_reg;
 
 	initial begin
 		Q_reg <= 'd50;
@@ -23,24 +23,20 @@ module random_galois_8bit
 	
 	assign o_random_data = Q_reg;
 	
-	assign taps = Q_reg[1];
+	assign taps = Q_reg[0];
 	
-	assign Q_x[4] = Q_reg[1] ^ Q_reg[5];
-	assign Q_x[3] = Q_reg[1] ^ Q_reg[4];
-	assign Q_x[2] = Q_reg[1] ^ Q_reg[3];
+	assign Q_x[3] = Q_reg[0] ^ Q_reg[4];
+	assign Q_x[2] = Q_reg[0] ^ Q_reg[3];
+	assign Q_x[1] = Q_reg[0] ^ Q_reg[2];
 	
 	always @(posedge clk or negedge rst_n) begin
 		if (!rst_n) begin
 			Q_reg <= 'd50;
 		end
 		else begin
-			if (i_enable) 
-				Q_reg <= Q_next;
+			if (i_enable)
+				Q_reg <= {taps, Q_reg[7], Q_reg[6], Q_reg[5], Q_reg[4], Q_x[3], Q_x[2], Q_x[1]};
 		end
-	end
-	
-	always @(taps or Q_reg) begin
-		Q_next <= {taps, Q_reg[8], Q_reg[7], Q_reg[6], Q_reg[5], Q_x[4], Q_x[3], Q_x[2]};
 	end
 	
 endmodule
