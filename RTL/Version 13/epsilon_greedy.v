@@ -110,7 +110,7 @@ module epsilon_greedy
 					else o_action <= action_random;
 					
 				end
-				else o_action_valid <= 1;
+				else o_action_valid <= 0;
 			end
 			
 		end 
