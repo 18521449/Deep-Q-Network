@@ -199,6 +199,10 @@ module deep_q_network
 				current_state_1_reg <= i_state_1;
 			end
 			
+			if (o_action_valid) begin
+				action_reg <= o_action;
+			end
+
 			// FINITE STATE MACHINE
 			case (finite_state_machine)
 				2'b00: // weight initialization
@@ -271,5 +275,3 @@ module deep_q_network
 	endfunction
 	
 endmodule
-
-
